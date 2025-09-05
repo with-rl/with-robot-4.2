@@ -1,0 +1,49 @@
+<mujoco model="tidybot scene">
+  <include file="tidybot.xml"/>
+
+  <statistic center="0 0 0.525" extent="1.1" meansize="0.05"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.1 0.1 0.1" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="140" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+
+    <!-- 벽 재질 -->
+    <material name="wall_material" rgba="0.85 0.85 0.85 1" reflectance="0.1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" directional="true"/>
+
+    <!-- 10m x 10m 바닥 -->
+    <geom name="floor" type="box" size="5 5 0.05" pos="0 0 -0.05" material="groundplane"
+          contype="1" conaffinity="1" condim="3"
+          friction="1 0.005 0.0001" solimp="0.9 0.95 0.002" solref="0.001 1"
+          margin="0.001" priority="1"/>
+
+    <!-- ================ 외벽 (높이 2m) ================ -->
+    <!-- 북쪽 벽 -->
+    <geom name="wall_north" type="box" size="5.1 0.1 1.05" pos="0 5 0.95" 
+          material="wall_material"/>
+    
+    <!-- 남쪽 벽 -->
+    <geom name="wall_south" type="box" size="5.1 0.1 1.05" pos="0 -5 0.95" 
+          material="wall_material"/>
+    
+    <!-- 동쪽 벽 -->
+    <geom name="wall_east" type="box" size="0.1 5 1.05" pos="5 0 0.95" 
+          material="wall_material"/>
+    
+    <!-- 서쪽 벽 -->
+    <geom name="wall_west" type="box" size="0.1 5 1.05" pos="-5 0 0.95" 
+          material="wall_material"/>
+
+  </worldbody>
+</mujoco>
