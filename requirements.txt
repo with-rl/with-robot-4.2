@@ -18,3 +18,4 @@ google-cloud-aiplatform
 mujoco
 glfw
 scipy
+ruckig

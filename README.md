@@ -1,21 +1,25 @@
-# AI-Powered Robot Task Planner
+# Stanford TidyBot MuJoCo Simulator
 
-This project utilizes a Large Language Model (LLM) to generate an optimal sequence of actions for a simulated robot. The primary task for the robot is to rearrange colored cubes in a 2D space to group them by color, minimizing the total travel distance.
+This project provides a simulation of the Stanford TidyBot using MuJoCo, a powerful physics simulator. The simulation is controlled via a REST API built with FastAPI, allowing for remote and programmatic control of the robot's actions.
 
-## How it Works
+## Features
 
-The core logic is contained within the `src/graph.ipynb` Jupyter Notebook, which orchestrates the entire process:
+- **Realistic Physics Simulation**: Utilizes MuJoCo to simulate the robot's dynamics and interactions with its environment.
+- **Advanced Trajectory Control**: A sophisticated trajectory generation and execution system enables smooth, predictable movements for the robot's arm and base.
+- **Complex Action Sequences**: Supports multi-phase actions, such as a complete pickup sequence involving approaching, grasping, and lifting an object.
+- **Inverse Kinematics (IK)**: An IK solver (`IKSolver`) translates target positions and orientations into the required joint angles for the robot's arm.
+- **REST API Control**: A FastAPI server exposes endpoints to control the simulation, manage the environment, and command the robot.
+- **Interactive Client**: A Jupyter Notebook (`robot/client.ipynb`) provides a practical example of how to interact with the simulation via the API.
+- **Dynamic Environment**: The positions of objects (cubes) in the scene can be randomized for dynamic testing scenarios.
 
-1.  **Initialization**: A Google Gemini Pro model is initialized using the LangChain library.
-2.  **State Definition**: The initial positions of several colored (red and blue) cubes are defined in a 2D space. The notebook also includes functionality to randomize these positions for different scenarios.
-3.  **Structured Output**: Pydantic models (`Action` and `Plan`) are used to ensure the LLM returns a well-structured plan that the system can parse and execute. An `Action` consists of a `move` command with a `start` and `end` location, and a `Plan` is a list of these actions.
-4.  **Prompt Engineering**: A detailed prompt is constructed to guide the LLM. It includes:
-    *   The robot's role and objective.
-    *   Strict rules for generating the plan (e.g., minimize distance, group by color).
-    *   The current state of all cubes, formatted as a JSON object.
-    *   The required JSON output format for the plan.
-5.  **Plan Generation**: The LLM processes the prompt and generates a `Plan` containing the optimal sequence of `Action`s to achieve the goal.
-6.  **Visualization**: `matplotlib` is used to create a scatter plot that visualizes the initial positions of the cubes and the final arrangement after the robot executes the generated plan.
+## Project Structure
+
+- `robot/simulator.py`: The core of the project, containing the `MujocoSimulator` class that manages the simulation loop, robot state, and trajectory execution.
+- `robot/simulator_util.py`: Provides utility classes, most notably the `IKSolver` for inverse kinematics calculations.
+- `robot/main.py`: A FastAPI application that creates a REST API to control the simulator. It runs the simulator in a separate thread.
+- `robot/client.ipynb`: An example Jupyter Notebook demonstrating how to send commands to the simulator using the REST API.
+- `model/stanford_tidybot/`: Contains the MuJoCo XML files that define the robot's structure (`tidybot.xml`) and the simulation scene (`scene.xml`).
+- `requirements.txt`: A list of all Python dependencies required for the project.
 
 ## Setup and Installation
 
@@ -25,10 +29,11 @@ The core logic is contained within the `src/graph.ipynb` Jupyter Notebook, which
     cd with-robot-4.2
     ```
 
-2.  **Create a virtual environment:**
+2.  **Create and activate a virtual environment:**
     ```bash
-    python -m venv robot
-    source robot/bin/activate
+    python -m venv venv
+    source venv/bin/activate
+    # On Windows, use: venv\Scripts\activate
     ```
 
 3.  **Install dependencies:**
@@ -36,34 +41,42 @@ The core logic is contained within the `src/graph.ipynb` Jupyter Notebook, which
     pip install -r requirements.txt
     ```
 
-4.  **Set up environment variables:**
-    Create a `.env` file in the root directory by copying the `.env_sample` file.
-    ```bash
-    cp .env_sample .env
-    ```
-    Open the `.env` file and add your Google API Key:
-    ```
-    GOOGLE_API_KEY="YOUR_API_KEY"
-    ```
+## How to Run
 
-## Usage
+To start the simulation and the API server, run the following command from the project's root directory:
 
-1.  **Start Jupyter Notebook:**
-    ```bash
-    jupyter notebook
-    ```
-2.  Open the `src/graph.ipynb` notebook.
-3.  Run the cells sequentially to see the plan generation and visualization.
+```bash
+python robot/main.py
+```
 
-## Key Dependencies
+This will:
+1.  Launch the FastAPI server on `http://localhost:8800`.
+2.  Open a MuJoCo viewer window displaying the robot simulation.
 
-*   `langchain` & `langgraph`: For building and running the LLM-powered graph.
-*   `langchain-google-genai`: For interacting with the Google Gemini models.
-*   `pydantic`: For data validation and structured output.
-*   `numpy`: For numerical operations.
-*   `matplotlib`: For data visualization.
-*   `python-dotenv`: For managing environment variables.
+## API Usage
 
-## License
+The API provides several endpoints to interact with the simulation. You can use any HTTP client or the provided `robot/client.ipynb` notebook to send requests.
 
-This project is licensed under the terms of the LICENSE file.
+### Endpoints
+
+- `GET /`
+  - **Description**: Checks the status of the server.
+
+- `GET /cube/set`
+  - **Description**: Randomizes the positions of the cubes in the simulation environment.
+
+- `GET /cube/get`
+  - **Description**: Retrieves a list of all cubes and their current positions and orientations.
+
+- `POST /cmd/move_to`
+  - **Description**: Moves the robot's base to a position near the specified target object.
+  - **Body**: `{"target": "cube_name"}`
+
+- `POST /cmd/pick_up`
+  - **Description**: Executes a full pickup sequence for the specified target object.
+  - **Body**: `{"target": "cube_name"}`
+
+- `GET /cmd/place`
+  - **Description**: Commands the robot to place the object it is currently holding.
+
+For a detailed, hands-on guide on using these endpoints, please see the `robot/client.ipynb` notebook.

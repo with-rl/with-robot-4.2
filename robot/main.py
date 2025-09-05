@@ -51,6 +51,11 @@ def pick_up(cmd: Cmd):
     simulator.pick_up(cmd.target)
     return {}
 
+@app.get("/cmd/place")
+def place():
+    simulator.place()
+    return {}
+
 
 if __name__ == "__main__":
     thread = threading.Thread(target=run_simulator)
