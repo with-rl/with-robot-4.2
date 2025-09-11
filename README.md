@@ -1,135 +1,184 @@
-# Stanford TidyBot MuJoCo Simulator
+# AI-Powered Robot Task Planner
 
-This project provides a simulation of the Stanford TidyBot using MuJoCo, a powerful physics simulator. The simulation is controlled via a REST API built with FastAPI, allowing for remote and programmatic control of the robot's actions.
+This project is an **AI-Powered Robot Task Planner** that uses Large Language Models to generate optimal movement sequences for a simulated robot. The system analyzes cube positions and generates structured movement plans to group cubes by color while minimizing travel distance.
+
+## System Architecture
+
+The project consists of two main components:
+
+- **Agent** (`agent/`): LangChain + Google Gemini LLM that analyzes cube positions and generates structured movement plans to group cubes by color while minimizing travel distance
+- **Robot Simulator** (`robot/`): MuJoCo-based 3D physics simulation with Stanford TidyBot model, exposing FastAPI endpoints for robot control
 
 ## Features
 
-- **Realistic Physics Simulation**: Utilizes MuJoCo to simulate the robot's dynamics and interactions with its environment.
-- **Advanced Trajectory Control**: A sophisticated trajectory generation and execution system enables smooth, predictable movements for the robot's arm and base, with modular mobile and manipulator control.
-- **Complex Action Sequences**: Supports multi-phase actions, such as a complete pickup sequence involving approaching, grasping, and lifting an object.
-- **Inverse Kinematics (IK)**: An IK solver (`IKSolver`) translates target positions and orientations into the required joint angles for the robot's arm.
-- **Synchronous API Control**: A FastAPI server exposes endpoints to control the simulation, with synchronous operation that waits for command completion before responding.
-- **Interactive Client**: A Jupyter Notebook (`robot/client.ipynb`) provides a practical example of how to interact with the simulation via the API.
-- **Dynamic Environment**: The positions of objects (cubes) in the scene can be randomized for dynamic testing scenarios.
+- **AI Task Planning**: Large Language Model (Google Gemini) analyzes cube positions and generates optimal movement sequences
+- **Structured Output**: Uses Pydantic models to ensure valid JSON responses from LLM with Action/Plan validation
+- **LangGraph Routing**: Intelligent routing system that directs requests to query, update, or planning operations
+- **Realistic Physics Simulation**: Utilizes MuJoCo to simulate the robot's dynamics and interactions with its environment
+- **Advanced Trajectory Control**: Sophisticated trajectory generation and execution system for smooth robot movements
+- **Complex Action Sequences**: Multi-phase actions including complete pickup sequences (approach, grasp, lift, hold)
+- **Inverse Kinematics (IK)**: SLSQP-based IK solver translates target positions into joint angles
+- **Synchronous API Control**: FastAPI server with synchronous operations that wait for command completion
+- **Interactive Development**: Jupyter Notebook interface for AI logic development and testing
 
 ## Project Structure
 
-- `robot/simulator.py`: The core of the project, containing the `MujocoSimulator` class that manages the simulation loop, robot state, and trajectory execution.
-- `robot/manipulator.py`: Provides manipulator functionality including trajectory classes, inverse kinematics solver (`IKSolver`), and trajectory executor for arm and gripper control.
-- `robot/mobile.py`: Handles mobile robot base movement and trajectory execution, separated for modular robot control.
-- `robot/main.py`: A FastAPI application that creates a REST API to control the simulator. It runs the simulator in a separate thread.
-- `robot/client.ipynb`: An example Jupyter Notebook demonstrating how to send commands to the simulator using the REST API.
-- `model/stanford_tidybot/`: Contains the MuJoCo XML files that define the robot's structure (`tidybot.xml`) and the simulation scene (`scene.xml`).
-- `requirements.txt`: A list of all Python dependencies required for the project.
+### AI Agent Components
+- `agent/src/graph.ipynb`: **Primary development interface** - Main LLM planning logic with interactive development
+- `agent/src/graph.py`: LangGraph-based robot routing system with Google Gemini integration
+- `agent/.env_sample`: Template for GOOGLE_API_KEY configuration
+
+### Robot Simulation Components  
+- `robot/simulator.py`: Core MujocoSimulator class handling 3D physics and robot orchestration
+- `robot/manipulator.py`: IKSolver, TrajectoryExecutor, and arm control with inverse kinematics
+- `robot/mobile.py`: MobileRobot class for independent base movement with trajectory queue
+- `robot/main.py`: FastAPI server exposing robot control endpoints on port 8800
+- `robot/client.ipynb`: API interaction examples and testing interface
+
+### 3D Model Assets
+- `model/stanford_tidybot/scene.xml`: Complete simulation scene definition with robot and environment
+- `model/stanford_tidybot/tidybot.xml`: Robot model with 7-DOF arm configuration
+- `model/stanford_tidybot/assets/`: STL meshes and visual components for robot model
 
 ## Setup and Installation
 
-1.  **Clone the repository:**
+### Prerequisites
+- Python 3.8+
+- Google API key for Gemini LLM access
+
+### Environment Setup
+1. **Clone the repository:**
     ```bash
     git clone <repository-url>
     cd with-robot-4.2
     ```
 
-2.  **Create and activate a virtual environment:**
+2. **Create and activate virtual environment:**
     ```bash
-    python -m venv venv
-    source venv/bin/activate
-    # On Windows, use: venv\Scripts\activate
+    python -m venv robot
+    source robot/bin/activate
+    # On Windows: robot\Scripts\activate
     ```
 
-3.  **Install dependencies:**
+3. **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
+4. **Configure API access:**
+    ```bash
+    cp agent/.env_sample .env
+    # Edit .env and add: GOOGLE_API_KEY="your_google_api_key"
+    ```
+
 ## How to Run
 
-To start the simulation and the API server, run the following command from the project's root directory:
+### Development Workflow
 
+#### Robot Simulation with API
 ```bash
-cd robot
-python main.py
-mjpython main.py  # on mac
+cd robot && python main.py
+# Runs on http://localhost:8800
+```
+
+### Alternative Development
+```bash
+# Runs LangGraph
+cd agent && langgraph dev
 ```
 
 This will:
-1.  Launch the FastAPI server on `http://localhost:8800`.
-2.  Open a MuJoCo viewer window displaying the robot simulation.
+1. Launch the FastAPI server on `http://localhost:8800`
+2. Open a MuJoCo viewer window displaying the robot simulation
+3. Enable AI planning through LangGraph routing system
 
 ## API Usage
 
-The API provides several endpoints to interact with the simulation. All robot control endpoints are **synchronous** - they wait for the command to complete before returning a response. You can use any HTTP client or the provided `robot/client.ipynb` notebook to send requests.
+The API provides endpoints for both robot control and AI planning. All robot control endpoints are **synchronous** - they wait for command completion before responding. You can use any HTTP client or the provided notebooks for interaction.
 
-### Endpoints
+### API Testing Examples
 
-#### Server Status
-- `GET /`
-  - **Description**: Checks the status of the server.
-  - **Response**: `{"name": "MujocoSimulator"}`
+#### Get Cube Positions
+```bash
+curl http://localhost:8800/cube/get
+```
+
+#### Randomize Cube Positions  
+```bash
+curl http://localhost:8800/cube/set
+```
+
+#### Control Robot Movement
+```bash
+curl -X POST http://localhost:8800/cmd/move_to \
+  -H "Content-Type: application/json" \
+  -d '{"target": "cube_1"}'
+```
+
+#### Pick Up Objects
+```bash
+curl -X POST http://localhost:8800/cmd/pick_up \
+  -H "Content-Type: application/json" \
+  -d '{"target": "cube_blue_02"}'
+```
+
+#### Check Robot Status
+```bash
+curl http://localhost:8800/robot/status
+# Response: {"is_busy": false, "main_queue_length": 0, ...}
+```
+
+### Core API Endpoints
 
 #### Environment Control
-- `GET /cube/set`
-  - **Description**: Randomizes the positions of the cubes in the simulation environment.
-  - **Response**: `{}`
-
-- `GET /cube/get`
-  - **Description**: Retrieves a list of all cubes and their current positions and orientations.
-  - **Response**: `{"cube_list": [{"name": "cube_1", "position": [x, y, z], "euler": [rx, ry, rz]}, ...]}`
+- `GET /cube/get`: Returns current cube positions and orientations
+- `GET /cube/set`: Randomizes all cube positions
 
 #### Robot Control (Synchronous)
-- `POST /cmd/move_to`
-  - **Description**: Moves the robot's base to a position near the specified target object. **Waits for completion.**
-  - **Body**: `{"target": "cube_name"}`
-  - **Response**: `{"status": "completed", "target": "cube_name"}`
-
-- `POST /cmd/pick_up`
-  - **Description**: Executes a full pickup sequence for the specified target object. **Waits for completion.**
-  - **Body**: `{"target": "cube_name"}`
-  - **Response**: `{"status": "completed", "target": "cube_name"}`
-
-- `GET /cmd/place`
-  - **Description**: Commands the robot to place the object it is currently holding. **Waits for completion.**
-  - **Response**: `{"status": "completed"}`
+- `POST /cmd/move_to`: Moves robot base toward target (stops 50cm away)
+- `POST /cmd/pick_up`: Moves robot arm to pick up specified object
+- `GET /cmd/place`: Commands robot to place held object
 
 #### Robot Status
-- `GET /robot/status`
-  - **Description**: Get current robot status and queue information.
-  - **Response**: 
-    ```json
-    {
-      "is_busy": false,
-      "main_queue_length": 0,
-      "mobile_queue_length": 0,
-      "current_trajectory": null,
-      "mobile_trajectory": null
-    }
-    ```
+- `GET /robot/status`: Get current robot status and queue information
 
 For a detailed, hands-on guide on using these endpoints, please see the `robot/client.ipynb` notebook.
 
 ## Architecture Overview
 
-The project follows a modular architecture with clear separation of concerns:
+### AI Planning Architecture
+1. **AI Planning**: `agent/src/graph.ipynb` → LangGraph routing → Pydantic Action/Plan models → structured JSON
+2. **API Processing**: FastAPI endpoints → MujocoSimulator methods → parallel trajectory queues  
+3. **Parallel Execution**: Mobile base and manipulator systems operate independently with separate queues
+4. **Synchronous Response**: All robot control commands block until completion before responding
 
-### Core Components
+### Core System Components
 
-- **MujocoSimulator** (`simulator.py`): Main orchestrator that manages the simulation loop, coordinates between mobile and manipulator systems, and handles trajectory queue management.
+#### AI Agent Layer
+- **LangGraph Router**: Intelligent routing to query/update/plan operations using Google Gemini LLM
+- **Pydantic Models**: Structured data validation for Action/Plan objects ensuring valid LLM output
+- **Plan Generation**: AI analyzes cube positions and generates optimal movement sequences to group by color
 
-- **MobileRobot** (`mobile.py`): Dedicated to mobile base movement with its own trajectory queue and execution system. Handles base positioning and rotation with S-curve interpolation.
+#### Robot Control Layer  
+- **MujocoSimulator**: Main orchestrator managing both mobile and manipulator trajectory queues
+- **IKSolver**: SLSQP-based inverse kinematics solver with position and orientation cost functions
+- **TrajectoryExecutor**: S-curve interpolation system for smooth, physics-based arm movements
+- **MobileRobot**: Independent base movement system with dedicated trajectory queue and execution
+- **PickupSequence**: Complex 4-phase pickup coordination (approach, grasp, lift, hold)
 
-- **IKSolver & TrajectoryExecutor** (`manipulator.py`): Handles inverse kinematics calculations and trajectory execution for arm and gripper movements. Supports complex multi-phase pickup sequences.
+### Key Data Models
+- **Action**: Single robot command (`{"action": "move", "start": "cube_1", "end": "cube_2"}`)
+- **Plan**: Sequential list of Actions for complete task execution  
+- **Structured LLM Output**: Uses Pydantic to ensure valid JSON responses from Gemini
 
-### Data Flow
+### Critical Implementation Notes
+- **Quaternion Conversion**: Handle MuJoCo [w,x,y,z] ↔ SciPy [x,y,z,w] format differences carefully
+- **Joint Control**: 7-DOF arm controlled via `data.ctrl[3:10]` for proper physics-based joint control  
+- **Model Paths**: Must use absolute paths for MuJoCo models (automatically handled in main.py)
+- **Threading Model**: Simulator runs as daemon thread while FastAPI serves HTTP on port 8800
+- **End Effector**: Access robot end effector position through "pinch_site" site in MuJoCo model
 
-1. **API Request** → FastAPI endpoint receives command
-2. **Command Queuing** → Simulator adds trajectory to appropriate queue (mobile/manipulator)
-3. **Parallel Execution** → Mobile and manipulator trajectories execute independently
-4. **Completion Monitoring** → API waits for all queues to complete before responding
-5. **Response** → Client receives completion confirmation
-
-### Key Design Decisions
-
-- **Modular Control**: Separate mobile and manipulator systems allow independent operation
-- **Synchronous API**: Commands block until completion for predictable client behavior
-- **Queue-based Execution**: Multiple trajectories can be queued and executed in sequence
-- **Physics-based Control**: Uses MuJoCo's `data.ctrl` for proper joint control instead of direct position setting
+### Validation Approach
+- No formal test suite - validation through interactive notebook execution
+- Visual validation through 3D simulation and matplotlib plots
+- API testing through curl commands or robot/client.ipynb
