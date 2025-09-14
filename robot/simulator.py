@@ -57,7 +57,8 @@ class MujocoSimulator:
 
     def move_to(self, target_name):
         """Move robot base toward a target object, stopping 50cm away."""
-        self.mobile_robot.move_to(target_name)
+        occupancy_map = self.get_map()
+        self.mobile_robot.move_to(target_name, occupancy_map)
 
     def pick_up(self, target_name):
         """Execute a 4-phase pickup sequence for a target object."""
@@ -76,6 +77,55 @@ class MujocoSimulator:
         current_gripper = self.data.ctrl[10]
         trajectory = GripperTrajectory(current_gripper, 0, duration=1.0, description="Open gripper to place")
         self.movement_queue.append(trajectory)
+    
+    def get_map(self):
+        """Generate a 100x100 occupancy grid map for 10m x 10m area.
+        Each cell represents 0.1m x 0.1m. Value 1 indicates occupied space.
+        Map coordinates: (-5,-5) to (5,5) in world coordinates.
+        
+        Inflates obstacles by the robot's radius for path planning.
+        """
+        occupancy_map = np.zeros((100, 100))
+        
+        # Inflate obstacles by robot radius (approx 0.27m) for C-space planning
+        robot_safety_margin = 0.0
+
+        # Helper function to mark rectangular areas as occupied with robot safety margin
+        def mark_rectangle(center_x, center_y, size_x, size_y):
+            # Expand obstacle bounds by robot safety margin
+            expanded_size_x = size_x + robot_safety_margin
+            expanded_size_y = size_y + robot_safety_margin
+            
+            # Calculate grid bounds
+            x_min = max(0, int((center_x - expanded_size_x + 5.0) * 10))
+            x_max = min(100, int((center_x + expanded_size_x + 5.0) * 10) + 1)
+            y_min = max(0, int((center_y - expanded_size_y + 5.0) * 10))
+            y_max = min(100, int((center_y + expanded_size_y + 5.0) * 10) + 1)
+
+            occupancy_map[x_min:x_max, y_min:y_max] = 1
+
+        # Mark all movable objects using their actual geom sizes + robot safety margin
+        for body_id in range(self.model.nbody):
+            body_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_BODY, body_id)
+
+            # Only world and _ (object)
+            if not (body_name and (body_name.startswith('world') or body_name.startswith('_'))):
+                continue
+
+            # Find geoms associated with this body and get their sizes
+            for geom_id in range(self.model.ngeom):
+                if self.model.geom_bodyid[geom_id] == body_id:
+                    geom_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
+                    if geom_name in ['floor']:
+                        continue
+                    # geom_type = self.model.geom_type[geom_id]
+                    geom_pos = self.data.geom_xpos[geom_id]
+                    x, y = geom_pos[0], geom_pos[1]
+                    geom_size = self.model.geom_size[geom_id]
+                    size_x, size_y = geom_size[0], geom_size[1]
+                    mark_rectangle(x, y, size_x, size_y)
+
+        return occupancy_map
     
     def wait_for_completion(self):
         """Wait for all queued movements to complete."""
@@ -98,7 +148,7 @@ class MujocoSimulator:
         cube_list = []
         for i in range(self.model.nbody):
             body_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_BODY, i)
-            if not (body_name and body_name.startswith('cube_')):
+            if not (body_name and body_name.startswith('_cube_')):
                 continue
 
             body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, body_name)
@@ -119,7 +169,7 @@ class MujocoSimulator:
         """Randomize cube positions and orientations in the scene."""
         for i in range(self.model.nbody):
             body_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_BODY, i)
-            if not (body_name and body_name.startswith('cube_')):
+            if not (body_name and body_name.startswith('_cube_')):
                 continue
 
             body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, body_name)
