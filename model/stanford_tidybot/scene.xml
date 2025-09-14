@@ -52,56 +52,32 @@
     <body name="_cube_red_01" pos="1.03 1.03 0.02">
         <freejoint name="cube_red_01_joint"/>
         <inertial pos="0 0 0" mass="0.05" diaginertia="0.00001 0.00001 0.00001"/>
-        <geom type="box" size="0.02 0.02 0.02" rgba="1 0 0 1"
-              density="1250" friction="0.8 0.02 0.001"
-              contype="1" conaffinity="1" condim="3"
-              solimp="0.9 0.95 0.001" solref="0.02 1"
-              margin="0.001"/>
+        <geom type="box" size="0.02 0.02 0.02" rgba="1 0 0 1"/>
     </body>
     <body name="_cube_red_02" pos="1.03 -1.03 0.02">
         <freejoint name="cube_red_02_joint"/>
         <inertial pos="0 0 0" mass="0.05" diaginertia="0.00001 0.00001 0.00001"/>
-        <geom type="box" size="0.02 0.02 0.02" rgba="1 0 0 1"
-              density="1250" friction="0.8 0.02 0.001"
-              contype="1" conaffinity="1" condim="3"
-              solimp="0.9 0.95 0.001" solref="0.02 1"
-              margin="0.001"/>
+        <geom type="box" size="0.02 0.02 0.02" rgba="1 0 0 1"/>
     </body>
     <body name="_cube_red_03" pos="-1.03 1.03 0.02">
         <freejoint name="cube_red_03_joint"/>
         <inertial pos="0 0 0" mass="0.05" diaginertia="0.00001 0.00001 0.00001"/>
-        <geom type="box" size="0.02 0.02 0.02" rgba="1 0 0 1"
-              density="1250" friction="0.8 0.02 0.001"
-              contype="1" conaffinity="1" condim="3"
-              solimp="0.9 0.95 0.001" solref="0.02 1"
-              margin="0.001"/>
+        <geom type="box" size="0.02 0.02 0.02" rgba="1 0 0 1"/>
     </body>
     <body name="_cube_blue_01" pos="-1.03 -1.03 0.02">
         <freejoint name="cube_blue_01_joint"/>
         <inertial pos="0 0 0" mass="0.05" diaginertia="0.00001 0.00001 0.00001"/>
-        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"
-              density="1250" friction="0.8 0.02 0.001"
-              contype="1" conaffinity="1" condim="3"
-              solimp="0.9 0.95 0.001" solref="0.02 1"
-              margin="0.001"/>
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
     </body>
     <body name="_cube_blue_02" pos="1.03 0.53 0.02">
         <freejoint name="cube_blue_02_joint"/>
         <inertial pos="0 0 0" mass="0.05" diaginertia="0.00001 0.00001 0.00001"/>
-        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"
-              density="1250" friction="0.8 0.02 0.001"
-              contype="1" conaffinity="1" condim="3"
-              solimp="0.9 0.95 0.001" solref="0.02 1"
-              margin="0.001"/>
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
     </body>
     <body name="_cube_blue_03" pos="0.53 1.03 0.02">
         <freejoint name="cube_blue_03_joint"/>
         <inertial pos="0 0 0" mass="0.05" diaginertia="0.00001 0.00001 0.00001"/>
-        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"
-              density="1250" friction="0.8 0.02 0.001"
-              contype="1" conaffinity="1" condim="3"
-              solimp="0.9 0.95 0.001" solref="0.02 1"
-              margin="0.001"/>
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
     </body>
 
     <!-- ================ 기타 ================ -->
@@ -111,7 +87,7 @@
       <geom type="mesh" mesh="addone/Ball" rgba="0.5 0.5 0.5 1"
             density="600" friction="0.6 0.1 0.001"
             contype="1" conaffinity="1" condim="3"
-            solimp="0.9 0.95 0.001" solref="0.02 1"
+            solimp="0.9 0.95 0.002" solref="0.02 1"
             margin="0.001"/>
     </body>
   </worldbody>

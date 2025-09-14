@@ -5,15 +5,23 @@ Exposes REST API endpoints for robot control and cube manipulation.
 
 import os
 import threading
+
+import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
-import uvicorn
 from simulator import MujocoSimulator
 
+# --- Constants ---
+HOST = "0.0.0.0"
+PORT = 8800
+
+# --- FastAPI App Initialization ---
 app = FastAPI()
 
 # Construct the absolute path for the model file relative to this script's location.
-model_path = os.path.join(os.path.dirname(__file__), "..", "model", "stanford_tidybot", "scene.xml")
+model_path = os.path.join(
+    os.path.dirname(__file__), "..", "model", "stanford_tidybot", "scene.xml"
+)
 model_path = os.path.abspath(model_path)
 
 simulator = MujocoSimulator(model_path=model_path)
@@ -25,6 +33,7 @@ def run_simulator():
 
 
 # --- API Endpoints ---
+
 
 @app.get("/")
 def read_root():
@@ -48,11 +57,13 @@ def get_cube_positions():
 
 # --- Data Models ---
 
+
 class Cmd(BaseModel):
     target: str
 
 
 # --- Robot Control Endpoints ---
+
 
 @app.post("/cmd/move_to")
 def move_to(cmd: Cmd):
@@ -69,12 +80,14 @@ def pick_up(cmd: Cmd):
     simulator.wait_for_completion()
     return {"status": "completed", "target": cmd.target}
 
+
 @app.get("/cmd/place")
 def place():
     """Release gripper to place the held object."""
     simulator.place()
     simulator.wait_for_completion()
     return {"status": "completed"}
+
 
 @app.get("/robot/status")
 def get_robot_status():
@@ -83,8 +96,12 @@ def get_robot_status():
         "is_busy": simulator.is_busy(),
         "main_queue_length": len(simulator.movement_queue),
         "mobile_queue_length": len(simulator.mobile_robot.movement_queue),
-        "current_trajectory": simulator.current_trajectory.type if simulator.current_trajectory else None,
-        "mobile_trajectory": simulator.mobile_robot.current_trajectory.type if simulator.mobile_robot.current_trajectory else None
+        "current_trajectory": simulator.current_trajectory.type
+        if simulator.current_trajectory
+        else None,
+        "mobile_trajectory": simulator.mobile_robot.current_trajectory.type
+        if simulator.mobile_robot.current_trajectory
+        else None,
     }
 
 
@@ -93,10 +110,4 @@ if __name__ == "__main__":
     thread.daemon = True  # Ensure the thread exits when the main application does
     thread.start()
 
-    uvicorn.run(
-        app, 
-        host="0.0.0.0", 
-        port=8800, 
-        reload=False,
-        log_level="info"
-    )
+    uvicorn.run(app, host=HOST, port=PORT, reload=False, log_level="info")

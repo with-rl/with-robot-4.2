@@ -310,7 +310,7 @@
                       <camera name="wrist" pos="0. 0. -0.1375" quat="0.000000e+00 0.000000e+00 0.000000e+00 1.000000e+00" fovy="41.83792730009236"
                         resolution="640 480"/>
                       <!-- <site name="joint_8_site" pos="0 0 -0.19" quat="1 0 0 0" size="0.005" rgba="0 1 0 1"/> -->
-                      <site name="pinch_site" pos="0 0 -0.181525" quat="0 1 0 0" size="0.005" rgba="0 1 0 1" />
+                      <site name="pinch_site" pos="0 0 -0.19" quat="0 1 0 0" size="0.005" rgba="0 1 0 1" />
                     </body>
                   </body>
                 </body>
